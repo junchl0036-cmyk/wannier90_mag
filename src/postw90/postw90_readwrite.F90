@@ -1235,6 +1235,10 @@ contains
     if (pw90_nerwann%bandshift .and. (.not. found)) &
       call io_error('Error: ner_bandshift required but no ner_bandshift_energyshift provided', &
                     stdout, seedname)
+    ! add the reading of relaxation time for nerwann
+    pw90_nerwann%relax_time = 1.0_dp
+    call w90_readwrite_get_keyword(stdout, seedname, 'ner_relax_time', found, r_value=pw90_nerwann%relax_time)
+    
   end subroutine w90_wannier90_readwrite_read_nerwann
 
   !================================================!
