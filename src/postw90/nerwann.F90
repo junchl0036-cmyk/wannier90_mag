@@ -404,6 +404,7 @@ contains
     real(kind=dp)::omga_bndx(num_wann),omga_bndy(num_wann),omga_bndz(num_wann) 
 
     real(kind=dp), allocatable :: TDF1_kz(:,:,:),TDF2_kz(:,:,:)
+    ! size are not fixed at declaration, later allocated in the form of (9, size(TDFtotEnergyArr), ndim)
     real(kind=dp)              :: kweight
     integer                    :: ndim, i, j, k, EnIdx
 
