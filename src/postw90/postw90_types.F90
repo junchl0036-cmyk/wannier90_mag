@@ -250,6 +250,7 @@ module w90_postw90_types
     logical :: bandshift
     integer :: bandshift_firstband
     real(kind=dp) :: bandshift_energyshift
+    real(kind=dp) :: relax_time
   end type pw90_nerwann_type
 
   ! Parameters describing the direct lattice points R on a
