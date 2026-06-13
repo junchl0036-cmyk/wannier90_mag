@@ -207,7 +207,7 @@ module w90_nerwann
                        have_disentangled, spin_decomp, seedname, stdout, comm)
 
     !================================!
-    !Total TDF 1st term
+    !Output total TDF 1st term
     !================================!
     if (on_root) then
       tdf1_unit = io_file_unit()
@@ -232,7 +232,7 @@ module w90_nerwann
     end if
 
     !================================!
-    !Total TDF 1st term
+    !Output total TDF 2nd term
     !================================!
     if (on_root) then
       tdf2_unit = io_file_unit()
@@ -625,10 +625,10 @@ module w90_nerwann
     integer, intent(in) :: stdout
 
     real(kind=dp), intent(in) :: kpt(3)
-    real(kind=dp), intent(in)      :: EnergyArray(:)
-    real(kind=dp), intent(in)      :: eig_k(:)
-    real(kind=dp), intent(in)    :: vel_k(:, :)
-    real(kind=dp), intent(in)::omg_bnd1(:),omg_bnd2(:),omg_bnd3(:)
+    real(kind=dp), intent(in) :: EnergyArray(:)
+    real(kind=dp), intent(in) :: eig_k(:)
+    real(kind=dp), intent(in) :: vel_k(:, :)
+    real(kind=dp), intent(in) :: omg_bnd1(:),omg_bnd2(:),omg_bnd3(:)
     logical, intent(in) :: spin_decomp
     integer, intent(in) :: num_elec_per_state
     real(kind=dp), intent(out):: TDF1_kz(:, :, :),TDF2_kz(:, :, :)
@@ -675,6 +675,8 @@ module w90_nerwann
       ! Faster optimization: I precalculate the indices
       ! Value of the smearing in eV; default = 0 eV, i.e. no smearing
       smear = pw90_nerwann%tdf_smearing%fixed_width
+
+      ! min_f and max_f are the indices of the energy bins that will be affected by the smearing of this band
       if (smear/binwidth < min_smearing_binwidth_ratio) then
         min_f = max(nint((eig_k(BandIdx) - EnergyArray(1))/ &
                          (EnergyArray(size(EnergyArray)) - EnergyArray(1)) &
@@ -740,7 +742,8 @@ module w90_nerwann
                         vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
         TDF2_kz(ZY, loop_f, 1, BandIdx) = TDF2_kz(ZY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*& 
                                 physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-
+        
+        ! TDF1/2_kz calculation with spin decomposition
         if (spin_decomp) then
 
           ! Spin-up contribution
