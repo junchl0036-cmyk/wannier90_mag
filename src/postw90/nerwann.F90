@@ -597,43 +597,6 @@ contains
     if (ierr /= 0) call io_error('Error in deallocating TDF2_kz in calcTDFtot', stdout, seedname) 
   end subroutine calcTDFtot
 
-
-
-
-
-  function MinusFermiDerivative(E, mu, KT)
-    !================================================!
-    !> This function calculates -dn(E)/dE, where n(E) is the Fermi distribution
-    !function.
-    !>
-    !> \param E  Energy at which we want to calculate -dn(E)/dE, in 1/eV
-    !> \param mu Chemical potential in eV
-    !> \param KT k_Boltzmann * Temperature, in eV
-    !================================================!
-
-    real(kind=dp), intent(in) :: E
-    real(kind=dp), intent(in) :: mu
-    real(kind=dp), intent(in) :: KT
-    real(kind=dp) :: MinusFermiDerivative
-
-    ! I do not put stopwatches here because it would slow down the calculation by orders of magnitude
-
-    ! MaxExp is the maximum value to be used for the exp function.
-    ! The function is taken to be zero for x>MaxExp. This value is chosen so that
-    ! the function is truncated when its value is smaller than about 1.e-16
-    real(kind=dp), parameter :: MaxExp = 36._dp
-    real(kind=dp) :: MyExp
-
-    MyExp = (E - mu)/KT
-    if (abs(MyExp) > MaxExp) then
-      MinusFermiDerivative = 0._dp
-    else
-      MinusFermiDerivative = 1._dp/KT*exp(MyExp)/((exp(MyExp) + 1._dp)**2)
-    end if
-
-  end function MinusFermiDerivative
-  
-
   subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, eig_k,vel_k, omg_bnd1, omg_bnd2, omg_bnd3,EnergyArray,kpt,real_lattice,TDF1_kz,TDF2_kz,mp_grid, num_wann, num_elec_per_state, physics, spin_decomp,seedname, stdout)
     !================================================!
     !! This subroutine calculates the contribution to the TDF of a single k point
