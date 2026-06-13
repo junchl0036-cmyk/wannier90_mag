@@ -69,12 +69,7 @@ module w90_nerwann
 
 contains
 
-  subroutine nerwann_main(pw90_nerwann, dis_manifold, kpt_latt, &
-                            pw90_band_deriv_degen, postw90_oper, pw90_spin,physics, ws_region, &
-                            w90_system, wannier_data, ws_distance, wigner_seitz,print_output, &
-                            HH_R, SS_R, v_matrix, u_matrix, eigval,real_lattice, scissors_shift, &
-                            mp_grid, num_wann, num_bands, num_kpts,effective_model, &
-                            have_disentangled, spin_decomp, seedname, stdout,comm)
+  subroutine nerwann_main(pw90_nerwann, dis_manifold, kpt_latt, pw90_band_deriv_degen, postw90_oper, pw90_spin,physics, ws_region, w90_system, wannier_data, ws_distance, wigner_seitz,print_output, HH_R, SS_R, v_matrix, u_matrix, eigval,real_lattice, scissors_shift, mp_grid, num_wann, num_bands, num_kpts,effective_model, have_disentangled, spin_decomp, seedname, stdout,comm)
     !! This is the main routine of the NerWan module.
     !! It computes the transport coefficients under a magnetic field using the Boltzmann transport equation.
     !!
@@ -85,7 +80,7 @@ contains
     !!  3. The Nernst Coefficient in SI units (V/K)
     !!  4. The Ettingshausen Coefficient in SI units (m.K/Amp)
     !!
-  !================================================!
+    !================================================!
 
     use w90_constants, only: dp,dkpt
     use w90_io, only: io_file_unit, io_error, io_stopwatch
@@ -137,8 +132,9 @@ contains
     real(kind=dp), allocatable :: TDFtotEnergyArr(:)
     integer :: tdf1_unit,ndim
     integer :: tdf2_unit
-!Total TDF 1st+2nd along Bz 
-    real(kind=dp), allocatable :: TDF1totz(:, :, :),TDF2totz(:, :, :)! (coordinate,Energy) 
+    !Total TDF 1st+2nd along Bz 
+    real(kind=dp), allocatable :: TDF1totz(:, :, :, :),TDF2totz(:, :, :, :)
+    ! (coordinate,Energy), extra dimension for BandIdx
 
     integer :: LocalIdx, GlobalIdx
     ! I also add 3 times the smearing on each side of the TDF energy array to take into account also possible smearing effects
@@ -198,20 +194,21 @@ contains
     end if
 
     !Allocation for  TDF tensor with 9 components
-    allocate (TDF1totz(9, TDFEnergyNumPoints, ndim), stat=ierr) !total TDF 1st+2nd along Bz
+    allocate (TDF1totz(9, TDFEnergyNumPoints, ndim, num_wann), stat=ierr) !total TDF 1st+2nd along Bz
     if (ierr /= 0) call io_error('Error in allocating TDF1totz in nerwann_main', stdout, seedname)
-    allocate (TDF2totz(9, TDFEnergyNumPoints, ndim), stat=ierr) !total TDF 1st+2nd along Bz
+    allocate (TDF2totz(9, TDFEnergyNumPoints, ndim, num_wann), stat=ierr) !total TDF 1st+2nd along Bz
     if (ierr /= 0) call io_error('Error in allocating TDF2totz in nerwann_main', stdout, seedname)
-	call calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, postw90_oper, pw90_band_deriv_degen, pw90_spin, &
+	  
+    call calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, postw90_oper, pw90_band_deriv_degen, pw90_spin, &
                        ws_region, print_output, wannier_data, ws_distance, wigner_seitz, HH_R, SS_R, u_matrix, &
                        v_matrix, eigval, real_lattice, TDF1totz,TDF2totz, TDFtotEnergyArr, &
                        cell_volume, scissors_shift, mp_grid, num_bands, num_kpts, num_wann, &
                        w90_system%num_valence_bands, w90_system%num_elec_per_state, effective_model, &
                        have_disentangled, spin_decomp, seedname, stdout, comm)
 
-!================================!
-!Total TDF 1st term
-!================================!
+    !================================!
+    !Total TDF 1st term
+    !================================!
     if (on_root) then
       tdf1_unit = io_file_unit()
       open (unit=tdf1_unit, file=trim(seedname)//'_tdf1.dat')
@@ -231,18 +228,17 @@ contains
       end do
       close (tdf1_unit)
 	    if (print_output%iprint > 1) &
-        write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the " &
-&              //trim(seedname)//"_tdf1.dat file."
+        write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the "//trim(seedname)//"_tdf1.dat file."
     end if
 
-!================================!
-!Total TDF 1st term
-!================================!
+    !================================!
+    !Total TDF 1st term
+    !================================!
     if (on_root) then
       tdf2_unit = io_file_unit()
       open (unit=tdf2_unit, file=trim(seedname)//'_tdf2.dat')
       write (tdf2_unit, '(A)') "# Developed by  NerWann module of the Wannier90 code."
-     write (tdf2_unit, '(A)') "# Total Transport distribution function (in SI units of C^2/kg/m^3/S)"// &
+      write (tdf2_unit, '(A)') "# Total Transport distribution function (in SI units of C^2/kg/m^3/S)"// &
        " vs energy in eV"
       write (tdf2_unit, '(A)') "# Content of the columns:"
       write (tdf2_unit, '(A)') "# Energy xxz xyz yyz xzz yzz zzz yxz zxz zyz"
@@ -257,8 +253,7 @@ contains
       end do
       close (tdf2_unit)
 	    if (print_output%iprint > 1) &
-        write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the " &
-&              //trim(seedname)//"_tdf2.dat file."
+        write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the "//trim(seedname)//"_tdf2.dat file."
     end if
 
 
@@ -272,8 +267,8 @@ contains
 
 
 
-!!!Allocation for  response functions along Bz 
-!!!END  
+    !!!Allocation for  response functions along Bz 
+    !!!END  
 
 
     do LocalIdx = 1, counts(my_node_id)
@@ -306,21 +301,16 @@ contains
 
     if (on_root .and. (print_output%timing_level > 0)) call io_stopwatch('nerwann_main', 2, stdout, seedname)
 
-101 FORMAT(7G18.10)
-102 FORMAT(19G18.10)
-103 FORMAT(8G18.10)
-104 FORMAT(11G18.10)
+    101 FORMAT(7G18.10)
+    102 FORMAT(19G18.10)
+    103 FORMAT(8G18.10)
+    104 FORMAT(11G18.10)
   end subroutine nerwann_main
 
-  subroutine calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, postw90_oper, pw90_band_deriv_degen, &
-                           pw90_spin, ws_region, print_output, wannier_data, ws_distance, wigner_seitz, HH_R, &
-                           SS_R, u_matrix, v_matrix, eigval, real_lattice, TDF1totz,TDF2totz,TDFtotEnergyArr, &
-                           cell_volume, scissors_shift, mp_grid, num_bands, &
-                           num_kpts, num_wann, num_valence_bands, num_elec_per_state, &
-                           effective_model, have_disentangled, spin_decomp, seedname, stdout, comm)
-!============================!
-! This subroutine is aimed to calculate the Toal Transport distribution Function
-! In SI units of m^2*C^3/S^3
+  subroutine calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, postw90_oper, pw90_band_deriv_degen, pw90_spin, ws_region, print_output, wannier_data, ws_distance, wigner_seitz, HH_R, SS_R, u_matrix, v_matrix, eigval, real_lattice, TDF1totz,TDF2totz,TDFtotEnergyArr, cell_volume, scissors_shift, mp_grid, num_bands, num_kpts, num_wann, num_valence_bands, num_elec_per_state, effective_model, have_disentangled, spin_decomp, seedname, stdout, comm)
+    !============================!
+    ! This subroutine is aimed to calculate the Toal Transport distribution Function
+    ! In SI units of m^2*C^3/S^3
     !!
     !! The TDFtotEnergyArr must be already allocated and initialized with the
     !! energies in eV before calling this routine.
@@ -347,7 +337,7 @@ contains
     use w90_wan_ham, only: wham_get_eig_deleig, wham_get_eig_deltwoeig, & 
       Omega_operator
 
-!Variables
+    !Variables
     implicit none
 
     ! arguments
@@ -373,7 +363,7 @@ contains
 
     !! TDFtotEnergyArr The array with the energies for which the TDF is calculated, in eV
 
-! Dummy Variables
+    ! Dummy Variables
     
     real(kind=dp), intent(in) :: eigval(:, :)
     real(kind=dp), intent(in) :: real_lattice(3, 3)
@@ -421,7 +411,7 @@ contains
 	
     my_node_id = mpirank(comm)
     num_nodes = mpisize(comm)
-	if (my_node_id == 0) on_root = .true.
+	  if (my_node_id == 0) on_root = .true.
 
     if (print_output%iprint > 0 .and. (print_output%timing_level > 0)) call io_stopwatch('calcTDFtot', 1, stdout, seedname)
     if (print_output%iprint > 0) then
@@ -455,9 +445,9 @@ contains
     TDF2totz = 0.0_dp !Setting TDFtotz to Zero 
 
 
-    allocate (TDF1_kz(9, size(TDFtotEnergyArr), ndim), stat=ierr)
+    allocate (TDF1_kz(9, size(TDFtotEnergyArr), ndim, num_wann), stat=ierr)
     if (ierr /= 0) call io_error('Error in allocating TDF1_kz in calcTDFtot', stdout, seedname) 
-    allocate (TDF2_kz(9, size(TDFtotEnergyArr), ndim), stat=ierr)
+    allocate (TDF2_kz(9, size(TDFtotEnergyArr), ndim, num_wann), stat=ierr)
     if (ierr /= 0) call io_error('Error in allocating TDF2_kz in calcTDFtot', stdout, seedname)
     allocate (HH(num_wann, num_wann), stat=ierr)
     if (ierr /= 0) call io_error('Error in allocating HH in calcTDFtot', stdout, seedname)
@@ -509,7 +499,7 @@ contains
         pw90_nerwann%bandshift_energyshift, " eV."
     end if
 
-call utility_recip_lattice_base(real_lattice, recip_lattice, volume)
+    call utility_recip_lattice_base(real_lattice, recip_lattice, volume)
 
     NumPtsRefined = 0
     min_spacing = 1.e10_dp ! very large initial value
@@ -560,7 +550,7 @@ call utility_recip_lattice_base(real_lattice, recip_lattice, volume)
       if (pw90_nerwann%bandshift) then
         eig(pw90_nerwann%bandshift_firstband:) = eig(pw90_nerwann%bandshift_firstband:) + pw90_nerwann%bandshift_energyshift
       end if
-!!Calling Transport Functions
+      !!Calling Transport Functions
       call TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, &
                    eig, vel, omga_bndx, omga_bndy,omga_bndz, TDFtotEnergyArr,kpt,&
                    real_lattice, TDF1_kz,TDF2_kz,mp_grid,num_wann, num_elec_per_state, physics, spin_decomp, seedname, stdout)
@@ -644,17 +634,14 @@ call utility_recip_lattice_base(real_lattice, recip_lattice, volume)
   end function MinusFermiDerivative
   
 
-subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, &
-                      eig_k,vel_k, omg_bnd1, omg_bnd2, omg_bnd3,EnergyArray,kpt,&
-                      real_lattice,TDF1_kz,TDF2_kz,mp_grid, num_wann, num_elec_per_state, physics, spin_decomp,seedname, stdout)
+  subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, eig_k,vel_k, omg_bnd1, omg_bnd2, omg_bnd3,EnergyArray,kpt,real_lattice,TDF1_kz,TDF2_kz,mp_grid, num_wann, num_elec_per_state, physics, spin_decomp,seedname, stdout)
     !================================================!
     !! This subroutine calculates the contribution to the TDF of a single k point
     !!
     use w90_constants, only: dp, smearing_cutoff, min_smearing_binwidth_ratio
     use w90_utility, only: utility_w0gauss
     use w90_spin, only: spin_get_nk
-    use w90_types, only: print_output_type, wannier_data_type, ws_region_type, &
-      ws_distance_type
+    use w90_types, only: print_output_type, wannier_data_type, ws_region_type, ws_distance_type
     use w90_postw90_types, only: pw90_nerwann_type, pw90_spin_mod_type, wigner_seitz_type
 
 
@@ -750,8 +737,9 @@ subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distan
           rdum = 1._dp/(EnergyArray(2) - EnergyArray(1))
         end if
 
-!  write(*,6)'loop,rdum,occ,vel=',loop_f,rdum,r_num_elec_per_state,vel(BandIdx,1:3) !Added by Dr.Keivan main write
-!Total TDF 1st+2nd along Bz
+        !  write(*,6)'loop,rdum,occ,vel=',loop_f,rdum,r_num_elec_per_state,vel(BandIdx,1:3) !Added by Dr.Keivan main write
+        !Total TDF 1st+2nd along Bz
+
         TDF1_kz(XX, loop_f, 1, BandIdx) = TDF1_kz(XX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
                         vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
         TDF2_kz(XX, loop_f, 1, BandIdx) = TDF2_kz(XX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*& 
@@ -792,83 +780,82 @@ subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distan
         if (spin_decomp) then
 
           ! Spin-up contribution
-        TDF1_kz(XX, loop_f,2, BandIdx) = TDF1_kz(XX, loop_f,2, BandIdx)+rdum*alpha_sq*&
+          TDF1_kz(XX, loop_f,2, BandIdx) = TDF1_kz(XX, loop_f,2, BandIdx)+rdum*alpha_sq*&
                         vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XX, loop_f,2, BandIdx) = TDF2_kz(XX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
+          TDF2_kz(XX, loop_f,2, BandIdx) = TDF2_kz(XX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
                                 physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XY, loop_f,2, BandIdx) = TDF1_kz(XY, loop_f,2, BandIdx)+rdum*alpha_sq*&
+          TDF1_kz(XY, loop_f,2, BandIdx) = TDF1_kz(XY, loop_f,2, BandIdx)+rdum*alpha_sq*&
                         vel_k(BandIdx,1)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XY, loop_f,1, BandIdx) = TDF2_kz(XY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YX, loop_f,2, BandIdx) = TDF1_kz(YX, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YX, loop_f,2, BandIdx) = TDF2_kz(YX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YY, loop_f,2, BandIdx) = TDF1_kz(YY, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YY, loop_f,2, BandIdx) = TDF2_kz(YY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XZ, loop_f,2, BandIdx) = TDF1_kz(XZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XZ, loop_f,2, BandIdx) = TDF2_kz(XZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YZ, loop_f,2, BandIdx) = TDF1_kz(YZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YZ, loop_f,2, BandIdx) = TDF2_kz(YZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZZ, loop_f,2, BandIdx) = TDF1_kz(ZZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZZ, loop_f,2, BandIdx) = TDF2_kz(ZZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZX, loop_f,2, BandIdx) = TDF1_kz(ZX, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZX, loop_f,2, BandIdx) = TDF2_kz(ZX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZY, loop_f,2, BandIdx) = TDF1_kz(ZY, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZY, loop_f,2, BandIdx) = TDF2_kz(ZY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-       	!Spin-down contribution
-        TDF1_kz(XX, loop_f,3, BandIdx) = TDF1_kz(XX, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XX, loop_f,3, BandIdx) = TDF2_kz(XX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XY, loop_f,3, BandIdx) = TDF1_kz(XY, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XY, loop_f,3, BandIdx) = TDF2_kz(XY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YX, loop_f,3, BandIdx) = TDF1_kz(YX, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YX, loop_f,3, BandIdx) = TDF2_kz(YX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YY, loop_f,3, BandIdx) = TDF1_kz(YY, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YY, loop_f,3, BandIdx) = TDF2_kz(YY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XZ, loop_f,3, BandIdx) = TDF1_kz(XZ, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(XZ, loop_f,3, BandIdx) = TDF2_kz(XZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YZ, loop_f,3, BandIdx) = TDF1_kz(YZ, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(YZ, loop_f,3, BandIdx) = TDF2_kz(YZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZZ, loop_f,3, BandIdx) = TDF1_kz(ZZ, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZZ, loop_f,3, BandIdx) = TDF2_kz(ZZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZX, loop_f,3, BandIdx) = TDF1_kz(ZX, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZX, loop_f,3, BandIdx) = TDF2_kz(ZX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZY, loop_f,3, BandIdx) = TDF1_kz(ZY, loop_f,3, BandIdx)+rdum*beta_sq*&
-                        vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-        TDF2_kz(ZY, loop_f,3, BandIdx) = TDF2_kz(ZY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF2_kz(XY, loop_f,1, BandIdx) = TDF2_kz(XY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YX, loop_f,2, BandIdx) = TDF1_kz(YX, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YX, loop_f,2, BandIdx) = TDF2_kz(YX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YY, loop_f,2, BandIdx) = TDF1_kz(YY, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YY, loop_f,2, BandIdx) = TDF2_kz(YY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(XZ, loop_f,2, BandIdx) = TDF1_kz(XZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(XZ, loop_f,2, BandIdx) = TDF2_kz(XZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YZ, loop_f,2, BandIdx) = TDF1_kz(YZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YZ, loop_f,2, BandIdx) = TDF2_kz(YZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZZ, loop_f,2, BandIdx) = TDF1_kz(ZZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZZ, loop_f,2, BandIdx) = TDF2_kz(ZZ,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZX, loop_f,2, BandIdx) = TDF1_kz(ZX, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZX, loop_f,2, BandIdx) = TDF2_kz(ZX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZY, loop_f,2, BandIdx) = TDF1_kz(ZY, loop_f,2, BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZY, loop_f,2, BandIdx) = TDF2_kz(ZY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          !Spin-down contribution
+          TDF1_kz(XX, loop_f,3, BandIdx) = TDF1_kz(XX, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(XX, loop_f,3, BandIdx) = TDF2_kz(XX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(XY, loop_f,3, BandIdx) = TDF1_kz(XY, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,1)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(XY, loop_f,3, BandIdx) = TDF2_kz(XY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YX, loop_f,3, BandIdx) = TDF1_kz(YX, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YX, loop_f,3, BandIdx) = TDF2_kz(YX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YY, loop_f,3, BandIdx) = TDF1_kz(YY, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YY, loop_f,3, BandIdx) = TDF2_kz(YY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(XZ, loop_f,3, BandIdx) = TDF1_kz(XZ, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(XZ, loop_f,3, BandIdx) = TDF2_kz(XZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(YZ, loop_f,3, BandIdx) = TDF1_kz(YZ, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(YZ, loop_f,3, BandIdx) = TDF2_kz(YZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZZ, loop_f,3, BandIdx) = TDF1_kz(ZZ, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZZ, loop_f,3, BandIdx) = TDF2_kz(ZZ,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZX, loop_f,3, BandIdx) = TDF1_kz(ZX, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZX, loop_f,3, BandIdx) = TDF2_kz(ZX,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+          TDF1_kz(ZY, loop_f,3, BandIdx) = TDF1_kz(ZY, loop_f,3, BandIdx)+rdum*beta_sq*&
+                          vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
+          TDF2_kz(ZY, loop_f,3, BandIdx) = TDF2_kz(ZY,loop_f,3, BandIdx)+rdum*beta_sq*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*&
+                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
         end if
       end do
     end do !loop over bands
-
   end subroutine TDFtot_kpt
 
  
