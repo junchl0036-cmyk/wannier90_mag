@@ -660,6 +660,7 @@ module w90_nerwann
     TDF1_kz=0.0_dp !Putting initial value zero
     TDF2_kz=0.0_dp !Putting initial value zero
 
+    ! loop over bands to calculate the contribution to the TDF at this k-point
     do BandIdx = 1, num_wann
       if (spin_decomp) then
         ! Contribution to spin-up DOS of Bloch spinor with component
@@ -818,7 +819,8 @@ module w90_nerwann
                                   physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
         end if
       end do
-    end do !loop over bands
+    end do 
+    !loop over bands
   end subroutine TDFtot_kpt
 
  
