@@ -67,7 +67,7 @@ module w90_nerwann
   character(len=74), parameter :: pub_string_4 = &
                                   "Comput. Mater. Sci. (2022)10.1016/j.commatsci.2022.111412         "
 
-contains
+  contains
 
   subroutine nerwann_main(pw90_nerwann, dis_manifold, kpt_latt, pw90_band_deriv_degen, postw90_oper, pw90_spin,physics, ws_region, w90_system, wannier_data, ws_distance, wigner_seitz,print_output, HH_R, SS_R, v_matrix, u_matrix, eigval,real_lattice, scissors_shift, mp_grid, num_wann, num_bands, num_kpts,effective_model, have_disentangled, spin_decomp, seedname, stdout,comm)
     !! This is the main routine of the NerWan module.
