@@ -128,7 +128,7 @@ module w90_nerwann
     ! local variables
 
     integer :: TDFEnergyNumPoints
-    integer :: i, j, ierr, EnIdx
+    integer :: i, j, ierr, EnIdx, BandIdx
     real(kind=dp), allocatable :: TDFtotEnergyArr(:)
     integer :: tdf1_unit,ndim
     integer :: tdf2_unit
@@ -219,13 +219,19 @@ module w90_nerwann
       write (tdf1_unit, '(A)') "# Energy xxz xyz yyz xzz yzz zzz yxz zxz zyz"
       write (tdf1_unit, '(A)') '#   (if spin decomposition is required, 18 further columns are provided, with the 9'
       write (tdf1_unit, '(A)') '#    components of the TDFtot for the spin up, followed by those for the spin down)'
-      do i = 1, size(TDFtotEnergyArr)
-        if (ndim .eq. 1) then
-          write (tdf1_unit, 104) TDFtotEnergyArr(i), TDF1totz(:, i, 1)
-        else
-          write (tdf1_unit, 104) TDFtotEnergyArr(i), TDF1totz(:, i, :)
-        end if
+      
+      ! Loop over band idx and energy bins and write the TDFtot
+      do BandIdx = 1, num_wann
+        write(tdf1_unit, '(A,I5)') "# BandIdx = ", BandIdx
+        do i = 1, size(TDFtotEnergyArr)
+          if (ndim .eq. 1) then
+            write (tdf1_unit, 104) TDFtotEnergyArr(i), TDF1totz(:, i, 1, BandIdx)
+          else
+            write (tdf1_unit, 104) TDFtotEnergyArr(i), TDF1totz(:, i, :, BandIdx)
+          end if
+        end do
       end do
+
       close (tdf1_unit)
 	    if (print_output%iprint > 1) &
         write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the "//trim(seedname)//"_tdf1.dat file."
@@ -244,13 +250,19 @@ module w90_nerwann
       write (tdf2_unit, '(A)') "# Energy xxz xyz yyz xzz yzz zzz yxz zxz zyz"
       write (tdf2_unit, '(A)') '#   (if spin decomposition is required, 18 further columns are provided, with the 9'
       write (tdf2_unit, '(A)') '#    components of the TDFtot for the spin up, followed by those for the spin down)'
-      do i = 1, size(TDFtotEnergyArr)
-        if (ndim .eq. 1) then
-          write (tdf2_unit, 104) TDFtotEnergyArr(i), TDF2totz(:, i, 1)
-        else
-          write (tdf2_unit, 104) TDFtotEnergyArr(i), TDF2totz(:, i, :)
-        end if
+
+      ! Loop over band idx and energy bins and write the TDFtot
+      do BandIdx = 1, num_wann
+        write(tdf2_unit, '(A,I5)') "# BandIdx = ", BandIdx
+        do i = 1, size(TDFtotEnergyArr)
+          if (ndim .eq. 1) then
+            write (tdf2_unit, 104) TDFtotEnergyArr(i), TDF2totz(:, i, 1, BandIdx)
+          else
+            write (tdf2_unit, 104) TDFtotEnergyArr(i), TDF2totz(:, i, :, BandIdx)
+          end if
+        end do
       end do
+
       close (tdf2_unit)
 	    if (print_output%iprint > 1) &
         write (stdout, '(3X,A)') "Total Transport distribution function along Bz written on the "//trim(seedname)//"_tdf2.dat file."
