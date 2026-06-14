@@ -175,6 +175,7 @@ module w90_nerwann
     if (pw90_nerwann%tdf_smearing%use_adaptive) then
       call io_error('Adaptive smearing not allowed in Nerwann TDF', stdout, seedname)
     endif
+
     ! TDFtotEnergyArr
     TDF_exceeding_energy = max(TDF_exceeding_energy_times_smr*pw90_nerwann%tdf_smearing%fixed_width, 0.2_dp)
     TDFEnergyNumPoints = int(floor((dis_manifold%win_max - dis_manifold%win_min &
@@ -518,7 +519,7 @@ module w90_nerwann
     min_spacing = 1.e10_dp ! very large initial value
     max_spacing = 0.e0_dp
 
-    ! loop over kpoints
+    ! loop over all the kpoints in BZ to calculate the TDFtot from TDF1_kz and TDF2_kz, which are calculated for each kpoint
 
     do loop_tot = my_node_id, PRODUCT(pw90_nerwann%kmesh%mesh) - 1, num_nodes
 
@@ -576,8 +577,8 @@ module w90_nerwann
     ! I sum the results of the calculation on all nodes, and I store them on all
     ! nodes (because for the following, each node will do a different calculation,
     ! each of which will require the whole knowledge of the TDF array)
-    call comms_allreduce(TDF1totz(1, 1, 1), size(TDF1totz), 'SUM', stdout, seedname, comm)
-    call comms_allreduce(TDF2totz(1, 1, 1), size(TDF2totz), 'SUM', stdout, seedname, comm)
+    call comms_allreduce(TDF1totz(1, 1, 1, 1), size(TDF1totz), 'SUM', stdout, seedname, comm)
+    call comms_allreduce(TDF2totz(1, 1, 1, 1), size(TDF2totz), 'SUM', stdout, seedname, comm)
 
     if (on_root .and. (print_output%timing_level > 0)) call io_stopwatch('calcTDFtot', 2, stdout, seedname)
     if (on_root) then
@@ -644,7 +645,7 @@ module w90_nerwann
     real(kind=dp), intent(in) :: omg_bnd1(:),omg_bnd2(:),omg_bnd3(:)
     logical, intent(in) :: spin_decomp
     integer, intent(in) :: num_elec_per_state
-    real(kind=dp), intent(out):: TDF1_kz(:, :, :),TDF2_kz(:, :, :)
+    real(kind=dp), intent(out):: TDF1_kz(:, :, :, :),TDF2_kz(:, :, :, :)
     real(kind=dp), intent(in) :: real_lattice(3, 3)
     type(pw90_physical_constants_type), intent(in) :: physics
 
@@ -673,7 +674,7 @@ module w90_nerwann
     TDF1_kz=0.0_dp !Putting initial value zero
     TDF2_kz=0.0_dp !Putting initial value zero
 
-    ! loop over bands to calculate the contribution to the TDF at this k-point
+    ! loop over bands to calculate the contribution to the TDF at this k-point and all bands
     do BandIdx = 1, num_wann
       if (spin_decomp) then
         ! Contribution to spin-up DOS of Bloch spinor with component
