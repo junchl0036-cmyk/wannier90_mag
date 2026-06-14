@@ -349,8 +349,8 @@ contains
       ('Error: value of kslice_fermi_lines_colour not recognised ' &
        //'in w90_wannier90_readwrite_read', stdout, seedname)
 
-!    slice_plot_format         = 'plotmv'
-!    call w90_readwrite_get_keyword('slice_plot_format',found,c_value=slice_plot_format)
+      !    slice_plot_format         = 'plotmv'
+      !    call w90_readwrite_get_keyword('slice_plot_format',found,c_value=slice_plot_format)
   end subroutine w90_wannier90_readwrite_read_kslice
 
   !================================================!
@@ -565,16 +565,16 @@ contains
     integer :: kdotp_num_bands, ierr
     character(len=maxlen)              :: ctmp
 
-!-------------------------------------------------------
-!    alpha=0
-!    call w90_readwrite_get_keyword('alpha',found,i_value=alpha)
+    !-------------------------------------------------------
+    !    alpha=0
+    !    call w90_readwrite_get_keyword('alpha',found,i_value=alpha)
 
-!    beta=0
-!    call w90_readwrite_get_keyword('beta',found,i_value=beta)
+    !    beta=0
+    !    call w90_readwrite_get_keyword('beta',found,i_value=beta)
 
-!    gamma=0
-!    call w90_readwrite_get_keyword('gamma',found,i_value=gamma)
-!-------------------------------------------------------
+    !    gamma=0
+    !    call w90_readwrite_get_keyword('gamma',found,i_value=gamma)
+    !-------------------------------------------------------
 
     pw90_berry%transl_inv = .false.
     call w90_readwrite_get_keyword(stdout, seedname, 'transl_inv', found, l_value=pw90_berry%transl_inv)
@@ -610,8 +610,8 @@ contains
     call w90_readwrite_get_keyword(stdout, seedname, 'wanint_kpoint_file', found, &
                                    l_value=pw90_berry%wanint_kpoint_file)
 
-!    smear_temp = -1.0_dp
-!    call w90_readwrite_get_keyword('smear_temp',found,r_value=smear_temp)
+    !    smear_temp = -1.0_dp
+    !    call w90_readwrite_get_keyword('smear_temp',found,r_value=smear_temp)
 
     pw90_berry%kubo_smearing%use_adaptive = pw90_smearing%use_adaptive
     call w90_readwrite_get_keyword(stdout, seedname, 'kubo_adpt_smr', found, &
@@ -859,10 +859,10 @@ contains
          stdout, seedname)
     end if
 
-!    sigma_abc_onlyorb=.false.
-!    call w90_readwrite_get_keyword('sigma_abc_onlyorb',found,l_value=sigma_abc_onlyorb)
+    !    sigma_abc_onlyorb=.false.
+    !    call w90_readwrite_get_keyword('sigma_abc_onlyorb',found,l_value=sigma_abc_onlyorb)
 
-! -------------------------------------------------------------------
+    ! ---------------------------------------------------
 
     !IVO_END
 
@@ -893,11 +893,11 @@ contains
       call io_error('Error: dos_smr_fixed_en_width must be greater than or equal to zero', stdout, &
                     seedname)
 
-!    dos_gaussian_width        = 0.1_dp
-!    call w90_readwrite_get_keyword('dos_gaussian_width',found,r_value=dos_gaussian_width)
+    !    dos_gaussian_width        = 0.1_dp
+    !    call w90_readwrite_get_keyword('dos_gaussian_width',found,r_value=dos_gaussian_width)
 
-!    dos_plot_format           = 'gnuplot'
-!    call w90_readwrite_get_keyword('dos_plot_format',found,c_value=dos_plot_format)
+    !    dos_plot_format           = 'gnuplot'
+    !    call w90_readwrite_get_keyword('dos_plot_format',found,c_value=dos_plot_format)
 
     call w90_readwrite_get_range_vector(stdout, seedname, 'dos_project', found, &
                                         pw90_dos%num_project, lcount=.true.)
@@ -1655,8 +1655,8 @@ contains
         do nat = 1, atom_data%species_num(nsp)
           call utility_cart_to_frac(atom_data%pos_cart(:, nat, nsp), pos_frac, inv_lattice)
           write (stdout, '(1x,a1,1x,a2,1x,i3,3F10.5,3x,a1,1x,3F10.5,4x,a1)') &
-  &                 '|', atom_data%symbol(nsp), nat, pos_frac(:),&
-  &                 '|', atom_data%pos_cart(:, nat, nsp)*print_output%lenconfac, '|'
+          & '|', atom_data%symbol(nsp), nat, pos_frac(:),&
+          & '|', atom_data%pos_cart(:, nat, nsp)*print_output%lenconfac, '|'
         end do
       end do
       write (stdout, '(1x,a)') '*----------------------------------------------------------------------------*'
@@ -2137,7 +2137,7 @@ contains
       write (stdout, '(1x,a78)') '*----------------------------------------------------------------------------*'
     endif
 
-101 format(20x, a3, 2x, 3F11.6)
+    101 format(20x, a3, 2x, 3F11.6)
 
   end subroutine w90_postw90_readwrite_write
 
