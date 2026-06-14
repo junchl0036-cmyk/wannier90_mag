@@ -370,7 +370,7 @@ module w90_nerwann
     integer, intent(in) :: mp_grid(3)
     integer, intent(in) :: stdout
 
-    real(kind=dp), intent(out)   :: TDF1totz(:,:,:),TDF2totz(:,:,:)
+    real(kind=dp), intent(out)   :: TDF1totz(:,:,:,:),TDF2totz(:,:,:,:)
     real(kind=dp), intent(in)      :: TDFtotEnergyArr(:)
 
     !! TDFtotEnergyArr The array with the energies for which the TDF is calculated, in eV
@@ -444,11 +444,12 @@ module w90_nerwann
       ndim = 1
     end if
 
-    ! Initial check of sizes
-    if (size(TDF1totz, 1) /= 9 .or. size(TDF1totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF1totz, 3) /= ndim) then
+    ! Check that the size of TDF1/2totz is (9, size(TDFtotEnergyArr), ndim, num_wann)
+    if (size(TDF1totz, 1) /= 9 .or. size(TDF1totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF1totz, 3) /= ndim .or. size(TDF1totz, 4) /= num_wann) then
       call io_error('Wrong size for the TDF1totz array in calcTDFtot', stdout, seedname)
     end if
-    if (size(TDF2totz, 1) /= 9 .or. size(TDF2totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF2totz, 3) /= ndim) then
+
+    if (size(TDF2totz, 1) /= 9 .or. size(TDF2totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF2totz, 3) /= ndim .or. size(TDF2totz, 4) /= num_wann) then
       call io_error('Wrong size for the TDF2totz array in calcTDFtot', stdout, seedname)
     end if
 
