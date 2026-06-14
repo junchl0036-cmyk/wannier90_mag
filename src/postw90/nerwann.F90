@@ -69,7 +69,13 @@ module w90_nerwann
 
   contains
 
-  subroutine nerwann_main(pw90_nerwann, dis_manifold, kpt_latt, pw90_band_deriv_degen, postw90_oper, pw90_spin,physics, ws_region, w90_system, wannier_data, ws_distance, wigner_seitz,print_output, HH_R, SS_R, v_matrix, u_matrix, eigval,real_lattice, scissors_shift, mp_grid, num_wann, num_bands, num_kpts,effective_model, have_disentangled, spin_decomp, seedname, stdout,comm)
+  subroutine nerwann_main(pw90_nerwann, dis_manifold, kpt_latt, &
+     pw90_band_deriv_degen, postw90_oper, pw90_spin,physics, &
+     ws_region, w90_system, wannier_data, ws_distance, &
+     wigner_seitz,print_output, HH_R, SS_R, v_matrix, u_matrix, &
+     eigval,real_lattice, scissors_shift, mp_grid, num_wann, &
+     num_bands, num_kpts,effective_model, have_disentangled, &
+     spin_decomp, seedname, stdout,comm)
     !! This is the main routine of the NerWan module.
     !! It computes the transport coefficients under a magnetic field using the Boltzmann transport equation.
     !!
@@ -320,7 +326,14 @@ module w90_nerwann
     104 FORMAT(11G18.10)
   end subroutine nerwann_main
 
-  subroutine calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, postw90_oper, pw90_band_deriv_degen, pw90_spin, ws_region, print_output, wannier_data, ws_distance, wigner_seitz, HH_R, SS_R, u_matrix, v_matrix, eigval, real_lattice, TDF1totz,TDF2totz,TDFtotEnergyArr, cell_volume, scissors_shift, mp_grid, num_bands, num_kpts, num_wann, num_valence_bands, num_elec_per_state, effective_model, have_disentangled, spin_decomp, seedname, stdout, comm)
+  subroutine calcTDFtot(pw90_nerwann, dis_manifold, kpt_latt, &
+    postw90_oper, pw90_band_deriv_degen, pw90_spin, ws_region, &
+    print_output, wannier_data, ws_distance, wigner_seitz, HH_R, &
+    SS_R, u_matrix, v_matrix, eigval, real_lattice, TDF1totz,&
+    TDF2totz,TDFtotEnergyArr, cell_volume, scissors_shift, &
+    mp_grid, num_bands, num_kpts, num_wann, num_valence_bands, &
+    num_elec_per_state, effective_model, have_disentangled, &
+    spin_decomp, seedname, stdout, comm)
     !============================!
     ! This subroutine is aimed to calculate the Toal Transport distribution Function
     ! In SI units of m^2*C^3/S^3
@@ -611,7 +624,11 @@ module w90_nerwann
     if (ierr /= 0) call io_error('Error in deallocating TDF2_kz in calcTDFtot', stdout, seedname) 
   end subroutine calcTDFtot
 
-  subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, eig_k,vel_k, omg_bnd1, omg_bnd2, omg_bnd3,EnergyArray,kpt,real_lattice,TDF1_kz,TDF2_kz,mp_grid, num_wann, num_elec_per_state, physics, spin_decomp,seedname, stdout)
+  subroutine TDFtot_kpt(pw90_nerwann, ws_region, pw90_spin, &
+    wannier_data,ws_distance, wigner_seitz, HH_R, SS_R, eig_k,&
+    vel_k, omg_bnd1, omg_bnd2, omg_bnd3,EnergyArray,kpt,&
+    real_lattice,TDF1_kz,TDF2_kz,mp_grid, num_wann, &
+    num_elec_per_state, physics, spin_decomp,seedname, stdout)
     !================================================!
     !! This subroutine calculates the contribution to the TDF of a single k point
     !!
