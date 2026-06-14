@@ -459,11 +459,15 @@ module w90_nerwann
     end if
 
     ! Check that the size of TDF1/2totz is (9, size(TDFtotEnergyArr), ndim, num_wann)
-    if (size(TDF1totz, 1) /= 9 .or. size(TDF1totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF1totz, 3) /= ndim .or. size(TDF1totz, 4) /= num_wann) then
+    if (size(TDF1totz, 1) /= 9 .or. size(TDF1totz, 2) /= size &
+    (TDFtotEnergyArr) .or. size(TDF1totz, 3) /= ndim .or. size &
+    (TDF1totz, 4) /= num_wann) then
       call io_error('Wrong size for the TDF1totz array in calcTDFtot', stdout, seedname)
     end if
 
-    if (size(TDF2totz, 1) /= 9 .or. size(TDF2totz, 2) /= size(TDFtotEnergyArr) .or. size(TDF2totz, 3) /= ndim .or. size(TDF2totz, 4) /= num_wann) then
+    if (size(TDF2totz, 1) /= 9 .or. size(TDF2totz, 2) /= size &
+    (TDFtotEnergyArr) .or. size(TDF2totz, 3) /= ndim .or. size &
+    (TDF2totz, 4) /= num_wann) then
       call io_error('Wrong size for the TDF2totz array in calcTDFtot', stdout, seedname)
     end if
 
@@ -737,62 +741,145 @@ module w90_nerwann
         !  write(*,6)'loop,rdum,occ,vel=',loop_f,rdum,r_num_elec_per_state,vel(BandIdx,1:3) !Added by Dr.Keivan main write
         !Total TDF 1st+2nd along Bz
 
-        TDF1_kz(XX, loop_f, 1, BandIdx) = TDF1_kz(XX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(XX, loop_f, 1, BandIdx) = TDF2_kz(XX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XY, loop_f, 1, BandIdx) = TDF1_kz(XY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,1)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(XY, loop_f, 1, BandIdx) = TDF2_kz(XY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YX, loop_f, 1, BandIdx) = TDF1_kz(YX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(YX, loop_f, 1, BandIdx) = TDF2_kz(YX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YY, loop_f, 1, BandIdx) = TDF1_kz(YY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(YY, loop_f, 1, BandIdx) = TDF2_kz(YY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(XZ, loop_f, 1, BandIdx) = TDF1_kz(XZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(XZ, loop_f, 1, BandIdx) = TDF2_kz(XZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(YZ, loop_f, 1, BandIdx) = TDF1_kz(YZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(YZ, loop_f, 1, BandIdx) = TDF2_kz(YZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZZ, loop_f, 1, BandIdx) = TDF1_kz(ZZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(ZZ, loop_f, 1, BandIdx) = TDF2_kz(ZZ, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZX, loop_f, 1, BandIdx) = TDF1_kz(ZX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(ZX, loop_f, 1, BandIdx) = TDF2_kz(ZX, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-        TDF1_kz(ZY, loop_f, 1, BandIdx) = TDF1_kz(ZY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*& 
-                        vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp 
-        TDF2_kz(ZY, loop_f, 1, BandIdx) = TDF2_kz(ZY, loop_f,1, BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd2(BandIdx)*& 
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
+        TDF1_kz(XX, loop_f, 1, BandIdx) = TDF1_kz(XX, loop_f,1, &
+         BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,1)*vel_k(BandIdx,1) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+
+        TDF2_kz(XX, loop_f, 1, BandIdx) = TDF2_kz(XX, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1) &
+        *omg_bnd1(BandIdx) * physics%elem_charge_SI**4/ &
+        physics%hbar_SI**3*1.e-10_dp
+
+        TDF1_kz(XY, loop_f, 1, BandIdx) = TDF1_kz(XY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,1)*vel_k(BandIdx,2) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+
+        TDF2_kz(XY, loop_f, 1, BandIdx) = TDF2_kz(XY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1) &
+        *omg_bnd2(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+        
+        TDF1_kz(YX, loop_f, 1, BandIdx) = TDF1_kz(YX, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,2)*vel_k(BandIdx,1) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+
+        TDF2_kz(YX, loop_f, 1, BandIdx) = TDF2_kz(YX, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2) &
+        *omg_bnd1(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+
+        TDF1_kz(YY, loop_f, 1, BandIdx) = TDF1_kz(YY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,2)*vel_k(BandIdx,2) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+
+        TDF2_kz(YY, loop_f, 1, BandIdx) = TDF2_kz(YY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2) &
+        *omg_bnd2(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+
+        TDF1_kz(XZ, loop_f, 1, BandIdx) = TDF1_kz(XZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+        TDF2_kz(XZ, loop_f, 1, BandIdx) = TDF2_kz(XZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,1)*omg_bnd3(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+        TDF1_kz(YZ, loop_f, 1, BandIdx) = TDF1_kz(YZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,2)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+        TDF2_kz(YZ, loop_f, 1, BandIdx) = TDF2_kz(YZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,2)*omg_bnd3(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+        TDF1_kz(ZZ, loop_f, 1, BandIdx) = TDF1_kz(ZZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,3)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+        TDF2_kz(ZZ, loop_f, 1, BandIdx) = TDF2_kz(ZZ, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd3(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+        TDF1_kz(ZX, loop_f, 1, BandIdx) = TDF1_kz(ZX, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,3)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+        TDF2_kz(ZX, loop_f, 1, BandIdx) = TDF2_kz(ZX, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3)*omg_bnd1(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+
+        TDF1_kz(ZY, loop_f, 1, BandIdx) = TDF1_kz(ZY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*& 
+                        vel_k(BandIdx,3)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp 
+
+        TDF2_kz(ZY, loop_f, 1, BandIdx) = TDF2_kz(ZY, loop_f,1, &
+        BandIdx)+rdum*r_num_elec_per_state*vel_k(BandIdx,3) &
+        *omg_bnd2(BandIdx)*& 
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
         
         ! TDF1/2_kz calculation with spin decomposition
         if (spin_decomp) then
 
           ! Spin-up contribution
           TDF1_kz(XX, loop_f,2, BandIdx) = TDF1_kz(XX, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-          TDF2_kz(XX, loop_f,2, BandIdx) = TDF2_kz(XX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
-                                physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-          TDF1_kz(XY, loop_f,2, BandIdx) = TDF1_kz(XY, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                        vel_k(BandIdx,1)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-          TDF2_kz(XY, loop_f,1, BandIdx) = TDF2_kz(XY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd2(BandIdx)*&
-                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-          TDF1_kz(YX, loop_f,2, BandIdx) = TDF1_kz(YX, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                          vel_k(BandIdx,2)*vel_k(BandIdx,1)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-          TDF2_kz(YX, loop_f,2, BandIdx) = TDF2_kz(YX,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd1(BandIdx)*&
-                                  physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
-          TDF1_kz(YY, loop_f,2, BandIdx) = TDF1_kz(YY, loop_f,2, BandIdx)+rdum*alpha_sq*&
-                          vel_k(BandIdx,2)*vel_k(BandIdx,2)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
-          TDF2_kz(YY, loop_f,2, BandIdx) = TDF2_kz(YY,loop_f,2, BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd2(BandIdx)*&
+                        vel_k(BandIdx,1)*vel_k(BandIdx,1) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp
+
+          TDF2_kz(XX, loop_f,2, BandIdx) = TDF2_kz(XX,loop_f,2, &
+          BandIdx)+rdum*alpha_sq*&
+                        vel_k(BandIdx,1)*omg_bnd1(BandIdx)*&
+                                physics%elem_charge_SI**4/ &
+                                physics%hbar_SI**3*1.e-10_dp
+
+          TDF1_kz(XY, loop_f,2, BandIdx) = TDF1_kz(XY, loop_f,2, &
+          BandIdx)+rdum*alpha_sq*&
+                        vel_k(BandIdx,1)*vel_k(BandIdx,2) &
+                        *physics%elem_charge_SI**3/ &
+                        physics%hbar_SI**2*1.e10_dp
+
+          TDF2_kz(XY, loop_f,1, BandIdx) = TDF2_kz(XY,loop_f,2, &
+          BandIdx)+rdum*alpha_sq*vel_k(BandIdx,1)*omg_bnd2 &
+          (BandIdx)*&
+                                  physics%elem_charge_SI**4/&
+                                  physics%hbar_SI**3*1.e-10_dp
+
+          TDF1_kz(YX, loop_f,2, BandIdx) = TDF1_kz(YX, loop_f,2, &
+          BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,1) &
+                          *physics%elem_charge_SI**3/ &
+                          physics%hbar_SI**2*1.e10_dp
+
+          TDF2_kz(YX, loop_f,2, BandIdx) = TDF2_kz(YX,loop_f,2, &
+          BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd1 &
+          (BandIdx)*&
+                                  physics%elem_charge_SI**4/ &
+                                  physics%hbar_SI**3*1.e-10_dp
+
+          TDF1_kz(YY, loop_f,2, BandIdx) = TDF1_kz(YY, loop_f,2, &
+          BandIdx)+rdum*alpha_sq*&
+                          vel_k(BandIdx,2)*vel_k(BandIdx,2) &
+                          *physics%elem_charge_SI**3/ &
+                          physics%hbar_SI**2*1.e10_dp
+
+          TDF2_kz(YY, loop_f,2, BandIdx) = TDF2_kz(YY,loop_f,2, &
+          BandIdx)+rdum*alpha_sq*vel_k(BandIdx,2)*omg_bnd2 &
+          (BandIdx)*&
                                   physics%elem_charge_SI**4/physics%hbar_SI**3*1.e-10_dp
           TDF1_kz(XZ, loop_f,2, BandIdx) = TDF1_kz(XZ, loop_f,2, BandIdx)+rdum*alpha_sq*&
                           vel_k(BandIdx,1)*vel_k(BandIdx,3)*physics%elem_charge_SI**3/physics%hbar_SI**2*1.e10_dp
